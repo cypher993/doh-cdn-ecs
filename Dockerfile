@@ -1,12 +1,18 @@
 # 第一阶段：编译环境
 FROM golang:1.21-alpine AS builder
 
+# 【核心修复】：安装 git，这是拉取 GitHub 第三方包必需的
+RUN apk add --no-cache git
+
 WORKDIR /app
 
-# 只需要将 main.go 复制进去
+# 复制 main.go 进容器
 COPY main.go .
 
-# 直接在 Docker 容器内初始化 Go 模块并拉取依赖（省去本地操作）
+# 【优化】：配置 Go 代理，防止网络问题导致拉取失败
+ENV GOPROXY=https://goproxy.cn,direct
+
+# 初始化模块并下载依赖
 RUN go mod init custom-doh && go mod tidy
 
 # 编译成静态链接的二进制文件
